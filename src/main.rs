@@ -1,4 +1,3 @@
-use std::cmp::min;
 use std::env::args;
 
 enum Algorithms{
@@ -40,17 +39,33 @@ fn lev(a: &str , b : &str) -> usize{
     }
 
     // Multithreading
-    1 + min(min(
+    1 + min(
         lev(&a[1..], b),
-        lev(a, &b[1..])),
+        lev(a, &b[1..]),
         lev(&a[1..], &b[1..])
     )
 
 }
 
-fn wagner_fischer(s: &str , t : &str) -> usize{
-    let m = s.len();
-    let n = t.len();
+fn min(a: usize, b: usize, c : usize) -> usize {
+    return if a < b {
+        if a < c {
+            a
+        } else {
+            c
+        }
+    } else {
+        if b < c {
+            b
+        } else {
+            c
+        }
+    }
+}
+
+fn wagner_fischer(a: &str, b: &str) -> usize{
+    let m = a.len();
+    let n = b.len();
     let mut d: Vec<Vec<usize>> = vec![vec![0; n+1]; m+1];
 
     for i in 1..=m {
@@ -63,12 +78,12 @@ fn wagner_fischer(s: &str , t : &str) -> usize{
 
     for j in 1..=n {
         for i in 1..=m {
-            let substitution_cost = if s.chars().nth(i-1) == t.chars().nth(j-1) { 0 } else { 1 };
+            let substitution_cost = if a.chars().nth(i-1) == b.chars().nth(j-1) { 0 } else { 1 };
 
-            d[i][j] = min(min(
+            d[i][j] = min(
                 d[i-1][j] + 1,  // deletion
-                d[i][j-1] + 1), // insertion
-                                    d[i-1][j-1] + substitution_cost // substitution
+                d[i][j-1] + 1, // insertion
+                d[i-1][j-1] + substitution_cost // substitution
             );
         }
     }
