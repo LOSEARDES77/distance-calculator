@@ -1,34 +1,42 @@
+mod hamming_distance;
+
 use std::cmp::min;
 use std::env::args;
 use std::char::MAX as CHAR_MAX;
+use hamming_distance::hamming_distance;
 
 enum Algorithms{
     Levenshtein,
     WagnerFischer,
-    Bitap
+    Bitap,
+    Hamming
     // damerau_levenshtein,       // todo
     // optimal_string_alignment, // todo
-    // hamming                  // todo
+}
+
+fn help(args : Vec<String>) {
+    println!("Usage: {} <word_1> <word_2>", args.get(0).unwrap());
+    println!("Options:");
+    println!("\t-a, --algorithm\t\tAlgorithm to use. Default: WagnerFischer");
+    println!("\t-h, --help\t\tPrints help information");
+    println!("\t-v, --version\t\tPrints version information");
+    println!("\nAlgorithms:");
+    println!("\tlevenshtein, lev\t\tLevenshtein distance");
+    println!("\twagnerfischer, wf\t\tWagner-Fischer distance");
+    println!("\tbitap, bt\t\t\tBitap distance");
+    println!("\thamming, hm\t\t\tHamming distance");
 }
 
 fn main() {
     let args : Vec<String> = args().collect();
     if args.len() < 3 {
-        println!("Usage: {} <word_1> <word_2>", args.get(0).unwrap())
+        help(args);
     }else {
         let mut algorithm = "";
         let mut words: Vec<&str> = Vec::new();
         for (i, arg) in args.iter().enumerate() {
             if arg == "-h" || arg == "--help" {
-                println!("Usage: {} <word_1> <word_2>", args.get(0).unwrap());
-                println!("Options:");
-                println!("\t-a, --algorithm\t\tAlgorithm to use. Default: WagnerFischer");
-                println!("\t-h, --help\t\tPrints help information");
-                println!("\t-v, --version\t\tPrints version information");
-                println!("\nAlgorithms:");
-                println!("\tlevenshtein, lev\t\tLevenshtein distance");
-                println!("\twagnerfischer, wf\t\tWagner-Fischer distance");
-                println!("\tbitap, bt\t\tBitap distance");
+                help(args);
                 return;
             }
             if arg == "-v" || arg == "--version" {
@@ -50,6 +58,7 @@ fn main() {
             "levenshtein" | "lev" => { a = Algorithms::Levenshtein },
             "wagnerfischer" | "wf" => { a = Algorithms::WagnerFischer },
             "bitap" | "bt" => { a = Algorithms::Bitap },
+            "hamming" | "hm" => { a = Algorithms::Hamming },
             _ => { a = Algorithms::WagnerFischer }
         }
 
@@ -57,6 +66,7 @@ fn main() {
             Algorithms::Levenshtein => { println!("{}", lev(words.get(0).unwrap(), words.get(1).unwrap())) }
             Algorithms::WagnerFischer => { println!("{}", wagner_fischer(words.get(0).unwrap(), words.get(1).unwrap())) }
             Algorithms::Bitap => { println!("{}", bitap_bitwise_search(words.get(0).unwrap(), words.get(1).unwrap()).unwrap()) }
+            Algorithms::Hamming => { println!("{}", hamming_distance(words.get(0).unwrap(), words.get(1).unwrap())) }
         }
 
     }
