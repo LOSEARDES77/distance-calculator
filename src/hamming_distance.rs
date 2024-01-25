@@ -65,7 +65,7 @@ impl<const N: usize> FromStr for BitVec<N> {
 }
 
 pub fn hamming_distance(a: &str, b: &str) -> usize {
-    let a = a.trim().parse::<BitVec<8>>().unwrap();
-    let b = b.trim().parse::<BitVec<8>>().unwrap();
+    let a = BitVec::<32>::from_str(a).unwrap();
+    let b = BitVec::<32>::from_str(b).unwrap();
     a.hamming_distance(&b) as usize
 }

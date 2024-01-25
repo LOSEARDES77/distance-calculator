@@ -4,14 +4,15 @@ use std::cmp::min;
 use std::env::args;
 use std::char::MAX as CHAR_MAX;
 use hamming_distance::hamming_distance;
+use std::time::Instant;
 
+#[derive(Debug)]
 enum Algorithms{
     Levenshtein,
     WagnerFischer,
     Bitap,
-    Hamming
-    // damerau_levenshtein,       // todo
-    // optimal_string_alignment, // todo
+    Hamming,
+    OptimalStringAlignment
 }
 
 fn help(args : Vec<String>) {
@@ -21,14 +22,16 @@ fn help(args : Vec<String>) {
     println!("\t-h, --help\t\tPrints help information");
     println!("\t-v, --version\t\tPrints version information");
     println!("\nAlgorithms:");
-    println!("\tlevenshtein, lev\t\tLevenshtein distance");
-    println!("\twagnerfischer, wf\t\tWagner-Fischer distance");
-    println!("\tbitap, bt\t\t\tBitap distance");
-    println!("\thamming, hm\t\t\tHamming distance");
+    println!("\tlev\t->\tLevenshtein distance");
+    println!("\twf\t->\tWagner-Fischer distance");
+    println!("\tbt\t->\tBitap distance");
+    println!("\thm\t->\tHamming distance");
+    println!("\tosa\t->\tOptimal String Alignment distance");
 }
 
 fn main() {
     let args : Vec<String> = args().collect();
+    let mut raw = false;
     if args.len() < 3 {
         help(args);
     }else {
@@ -47,26 +50,36 @@ fn main() {
                 algorithm = args.get(i+1).unwrap().as_str();
             }
 
+            if arg == "-r" {
+                raw = true;
+            }
+
             if !arg.starts_with("-") && arg != algorithm && arg != args.get(0).unwrap(){
                 words.push(arg.as_str());
             }
 
         }
-        let algorithm: &str = args.get(1).unwrap();
         let a : Algorithms;
         match algorithm.to_lowercase().as_str() {
             "levenshtein" | "lev" => { a = Algorithms::Levenshtein },
             "wagnerfischer" | "wf" => { a = Algorithms::WagnerFischer },
             "bitap" | "bt" => { a = Algorithms::Bitap },
             "hamming" | "hm" => { a = Algorithms::Hamming },
+            "optimalstringalinment" | "osa" => { a = Algorithms::OptimalStringAlignment },
             _ => { a = Algorithms::WagnerFischer }
         }
-
+        let start_time = Instant::now();
+        println!("{}: {:?}", algorithm, a);
         match a {
             Algorithms::Levenshtein => { println!("{}", lev(words.get(0).unwrap(), words.get(1).unwrap())) }
             Algorithms::WagnerFischer => { println!("{}", wagner_fischer(words.get(0).unwrap(), words.get(1).unwrap())) }
             Algorithms::Bitap => { println!("{}", bitap_bitwise_search(words.get(0).unwrap(), words.get(1).unwrap()).unwrap()) }
             Algorithms::Hamming => { println!("{}", hamming_distance(words.get(0).unwrap(), words.get(1).unwrap())) }
+            Algorithms::OptimalStringAlignment => { println!("{}", osa_distance(words.get(0).unwrap(), words.get(1).unwrap())) }
+        }
+        if !raw {
+            let end_time = Instant::now();
+            println!("Took {} microseconds", end_time.duration_since(start_time).as_micros());
         }
 
     }
@@ -115,6 +128,37 @@ fn wagner_fischer(s: &str , t : &str) -> usize{
     }
 
     d[m][n]
+}
+fn osa_distance(a: &str, b: &str) -> usize {
+    let mut d = vec![vec![0; b.len() + 1]; a.len() + 1];
+
+    for i in 0..a.len() +1 {
+        d[i][0] = i;
+    }
+
+    for j in 0..b.len() +1 {
+        d[0][j] = j;
+    }
+
+    for i in 1..a.len() {
+        for j in 1..b.len() {
+            let cost = if a.as_bytes()[i - 1] == b.as_bytes()[j - 1] {
+                0
+            } else {
+                1
+            };
+            d[i][j] = min(
+                min(d[i - 1][j] + 1, d[i][j - 1] + 1),
+                d[i - 1][j - 1] + cost,
+            );
+
+            if i > 1 && j > 1 && a.as_bytes()[i - 1] == b.as_bytes()[j - 1] && a.as_bytes()[i - 2] == b.as_bytes()[j] {
+                d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1);
+            }
+        }
+    }
+
+    d[a.len()][b.len()]
 }
 
 fn bitap_bitwise_search(text: &str, pattern: &str) -> Option<usize> {
